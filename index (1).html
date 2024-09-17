@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Claim Points</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: black;
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent scrolling */
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Header style */
+        .header {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            background-color: #1E90FF;
+            padding: 20px;
+            font-size: 36px;
+            font-weight: bold;
+            color: black;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        /* $ONION style, placed in the bottom-right corner of the ONION header */
+        .total-points {
+            position: absolute;
+            bottom: 5px;
+            right: 60px; /* Adjusted to the left */
+            font-size: 18px;
+            font-weight: bold;
+            color: yellow;
+        }
+
+        .profile {
+            font-size: 40px;
+            font-weight: bold;
+            color: #1E90FF;
+            background-color: white;
+            border-radius: 50%;
+            height: 80px;
+            width: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .username {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .onion {
+            margin: 20px 0;
+        }
+
+        .onion img {
+            height: 50px;
+            width: 50px;
+        }
+
+        .points {
+            font-size: 48px;
+            font-weight: bold;
+        }
+
+        .claim-button {
+            margin-top: 20px;
+            background-color: yellow;
+            color: black;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 10px 40px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .claim-button:active {
+            background-color: darkorange;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            background-color: #222;
+            padding: 10px 0;
+        }
+
+        .footer div {
+            color: white;
+            font-size: 20px;
+            cursor: pointer; /* Make them look clickable */
+        }
+
+        /* Task page styles */
+        .task-page {
+            display: none;
+            padding-top: 100px;
+        }
+
+        .task-header {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .task {
+            font-size: 22px;
+            margin-bottom: 20px;
+        }
+
+        .task a {
+            color: #1E90FF;
+            text-decoration: underline;
+            font-weight: bold;
+        }
+
+        /* Disable button style */
+        .claim-button[disabled] {
+            background-color: grey;
+            cursor: not-allowed;
+        }
+
+        /* Hide original content on task pages */
+        .container.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+  <!-- Header section -->
+    <div class="header">
+        ONION
+        <div class="total-points" id="total-points">$ONION: 0</div>
+    </div>
+
+    <!-- Container with profile info -->
+    <div class="container">
+        <div class="profile" id="profile-logo">1</div>
+        <div class="username" id="username">USER</div>
+        <div class="onion">
+            <img src="https://cdn-icons-png.flaticon.com/512/4242/4242491.png" alt="Onion Logo">
+        </div>
+        <div class="points" id="points">0</div>
+        <button class="claim-button" id="claim-button" onclick="claimPoints()">CLAIM $ONION</button>
+    </div>
+
+    <!-- Task Page -->
+    <div class="task-page" id="task-page">
+        <div class="task-header" id="task-header">Earn Task</div>
+        <div class="task" id="task-content">
+            1. Follow <a href="https://x.com/virat_rajput01?t=AAhANyCbQeqKJIaiQspmog&s=09" target="_blank">X account</a> (500 $ONION)
+        </div>
+    </div>
+
+    <!-- Frens Page -->
+    <div class="task-page" id="frens-page">
+        <div class="task-header">Invite Friend</div>
+        <div class="task">
+            <button onclick="copyReferralLink()">Copy Referral Link</button>
+        </div>
+    </div>
+
+    <!-- Wallet Page -->
+    <div class="task-page" id="wallet-page">
+        <div class="task-header">WALLET</div>
+        <div class="task">
+            WALLET CONNECTION OPTION COMING SOON
+        </div>
+    </div>
+
+    <div class="footer">
+        <div onclick="showHome()">Home</div>
+        <div onclick="showEarn()">Earn</div>
+        <div onclick="showFrens()">Frens</div>
+        <div onclick="showWallet()">Wallet</div>
+    </div>
+
+<script>
+    let points = 0;
+    let totalPoints = parseInt(localStorage.getItem("totalPoints")) || 0;
+
+    function initializeUser() {
+        document.getElementById('profile-logo').textContent = getLevelFromPoints(totalPoints);
+        document.getElementById('username').textContent = "USER";  // Username set to 'USER'
+        checkClaimAvailability();
+    }
+
+    function getLevelFromPoints(points) {
+        if (points >= 50000) return '5';
+        if (points >= 10000) return '4';
+        if (points >= 5000) return '3';
+        if (points >= 1000) return '2';
+        return '1';
+    }
+
+    function claimPoints() {
+        const lastClaimDate = localStorage.getItem("lastClaimDate");
+        const today = new Date().toDateString();
+
+        if (lastClaimDate === today) {
+            alert("You have already claimed your onions today. Come back tomorrow!");
+            return;
+        }
+
+        points += 100;
+        totalPoints += 100;
+        document.getElementById("points").textContent = points;
+        document.getElementById("total-points").textContent = "$ONION: " + totalPoints;
+
+        document.getElementById("profile-logo").textContent = getLevelFromPoints(totalPoints);
+
+        localStorage.setItem("lastClaimDate", today);
+        localStorage.setItem("totalPoints", totalPoints);
+
+        document.getElementById("claim-button").disabled = true;
+        document.getElementById("claim-button").textContent = "Claimed!";
+    }
+
+    function checkClaimAvailability() {
+        const lastClaimDate = localStorage.getItem("lastClaimDate");
+        const today = new Date().toDateString();
+
+        if (lastClaimDate === today) {
+            document.getElementById("claim-button").disabled = true;
+            document.getElementById("claim-button").textContent = "Claimed!";
+        }
+
+        document.getElementById("total-points").textContent = "$ONION: " + totalPoints;
+        document.getElementById("profile-logo").textContent = getLevelFromPoints(totalPoints);
+    }
+
+    function showHome() {
+        hideAllPages();
+        document.querySelector('.container').classList.remove('hidden');
+    }
+
+    function showEarn() {
+        hideAllPages();
+        document.getElementById('task-page').style.display = 'block';
+    }
+
+    function showFrens() {
+        hideAllPages();
+        document.getElementById('frens-page').style.display = 'block';
+    }
+
+    function showWallet() {
+        hideAllPages();
+        document.getElementById('wallet-page').style.display = 'block';
+    }
+
+    function hideAllPages() {
+        document.querySelector('.container').classList.add('hidden');
+        document.getElementById('task-page').style.display = 'none';
+        document.getElementById('frens-page').style.display = 'none';
+        document.getElementById('wallet-page').style.display = 'none';
+    }
+
+    function copyReferralLink() {
+        const referralLink = "https://t.me/onion_crypto_bot";
+        const tempInput = document.createElement("input");
+        document.body.appendChild(tempInput);
+        tempInput.value = referralLink;
+        tempInput.select();
+        document.execCommand("copy");
+        document.body.removeChild(tempInput);
+        alert("Referral link copied: " + referralLink);
+    }
+
+    // Initialize user details on page load
+    initializeUser();
+</script>
+</body>
+</html>
